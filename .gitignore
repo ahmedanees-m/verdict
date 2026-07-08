@@ -9,3 +9,6 @@ data/raw/
 data/store/
 .DS_Store
 .pytest_cache/
+
+# Committed sample store: reproduces the evaluation from a clean clone.
+!data/sample_store/**/*.parquet

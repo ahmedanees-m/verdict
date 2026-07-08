@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from pathlib import Path
 
 import yaml
 
@@ -10,6 +11,14 @@ from verdict.checks.base import Claim, Status
 from verdict.checks.registry import CHECKS
 from verdict.compose.composer import compose
 from verdict.compose.support import gather_support
+
+
+def default_store() -> Store:
+    """The full store when present, else the committed sample store, so the
+    evaluation runs from a clean clone."""
+    full = "data/store"
+    base = full if Path(full, "zhu", "de.parquet").exists() else "data/sample_store"
+    return Store(base)
 
 
 def claim_of(case: dict) -> Claim:
@@ -25,7 +34,7 @@ def claim_of(case: dict) -> Claim:
 
 def main() -> None:
     cases = yaml.safe_load(open("EVAL_SET.yaml"))["cases"]
-    store = Store()
+    store = default_store()
     matrix: Counter = Counter()
     print(f"{'':2s} {'case':24s} {'expected':12s} {'actual':12s} fired")
     for case in cases:
