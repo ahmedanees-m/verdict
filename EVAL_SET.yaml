@@ -91,7 +91,7 @@ cases:
   - id: tyk2_psoriasis_genetics
     status: CONCRETE
     claim: "TYK2 is a genetically supported target for psoriasis."
-    source: "Open Targets psoriasis genetic-association score 0.930; coding protective variant TYK2 P1104A (rs34536443, PMC10589750). Moonen 2026 provides candidate cis-regulatory links at the locus (Table S3)."
+    source: "Open Targets psoriasis genetic-association score 0.9299; coding protective variant TYK2 P1104A (rs34536443, PMC10589750). Moonen 2026 provides candidate cis-regulatory links at the locus (Table S3)."
     claim_type: genetic_support
     parsed:
       gene: "TYK2"
@@ -108,7 +108,7 @@ cases:
     deleted_knowledge_ok: true
     notes: >
       SUPPORTED is computed from the receipted robust legs: the Open Targets
-      genetic-association score (0.930) and the coding protective variant P1104A
+      genetic-association score (0.9299) and the coding protective variant P1104A
       (rs34536443). Keep the two variants distinct: rs34536443 is the coding variant
       behind the genetic support; rs144309607 is a noncoding variant whose Moonen CRE
       is prioritized to twelve genes at this locus (including ICAM1), so it does not

@@ -25,6 +25,7 @@ class Claim:
     condition: Optional[str] = None       # "Rest" | "Stim8hr" | "Stim48hr"
     cited_source: Optional[str] = None    # dataset key for circularity, e.g. "Zhu2025"
     asserts_safety: bool = False
+    claim_type: Optional[str] = None      # selectivity | safety | genetic_support | directional | composite
 
 
 @dataclass

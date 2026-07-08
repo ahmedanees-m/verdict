@@ -18,6 +18,10 @@ MIN_CELLS = 25
 
 
 def run(claim: Claim, store) -> CheckResult:
+    if claim.claim_type == "genetic_support" or claim.scope == "genetic_association":
+        return CheckResult(name, Status.INSUFFICIENT,
+                           "Claim rests on genetic association, not a perturbation; "
+                           "perturbation power does not apply.")
     if not claim.gene or claim.cell_type not in CD4:
         return CheckResult(name, Status.INSUFFICIENT,
                            "No CD4-anchored perturbation to assess power for.")

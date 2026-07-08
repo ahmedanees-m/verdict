@@ -8,6 +8,7 @@ from collections import Counter
 from ..checks.base import Claim
 from ..checks.registry import CHECKS
 from ..compose.composer import compose, Verdict
+from ..compose.support import gather_support
 
 
 def _claim_from_case(c: dict) -> Claim:
@@ -19,13 +20,14 @@ def _claim_from_case(c: dict) -> Claim:
         cell_type=p.get("cell_type"), condition=p.get("condition"),
         cited_source=p.get("cited_source"),
         asserts_safety=(c.get("claim_type") == "safety"),
+        claim_type=c.get("claim_type"),
     )
 
 
 def run_case(case: dict, store) -> Verdict:
     claim = _claim_from_case(case)
     results = [run(claim, store) for run in CHECKS.values()]
-    verdict, _ = compose(results)
+    verdict, _ = compose(results, support=gather_support(claim, store))
     return verdict
 
 

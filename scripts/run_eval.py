@@ -9,6 +9,7 @@ from verdict.store import Store
 from verdict.checks.base import Claim, Status
 from verdict.checks.registry import CHECKS
 from verdict.compose.composer import compose
+from verdict.compose.support import gather_support
 
 
 def claim_of(case: dict) -> Claim:
@@ -18,7 +19,8 @@ def claim_of(case: dict) -> Claim:
         disease=p.get("disease"), program=p.get("program"), direction=p.get("direction"),
         scope=p.get("scope"), cell_type=p.get("cell_type"), condition=p.get("condition"),
         cited_source=p.get("cited_source"),
-        asserts_safety=(case.get("claim_type") == "safety"))
+        asserts_safety=(case.get("claim_type") == "safety"),
+        claim_type=case.get("claim_type"))
 
 
 def main() -> None:
@@ -29,7 +31,7 @@ def main() -> None:
     for case in cases:
         claim = claim_of(case)
         results = [run(claim, store) for run in CHECKS.values()]
-        verdict, _ = compose(results)
+        verdict, _ = compose(results, support=gather_support(claim, store))
         fired = [r.check_name for r in results if r.status is Status.FIRED]
         expected = case["expected_verdict"]
         ok = verdict.value == expected
