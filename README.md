@@ -98,6 +98,8 @@ sources, the six confound checks, and the verdict composer. In progress: the
 composer genetic-support chain, the reasoning layer, the dossier renderer, and
 the application.
 
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
