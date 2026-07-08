@@ -6,10 +6,16 @@ follows Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- Reasoning layer: a claim parser, a check selector with logged rationale and composite-claim decomposition, an adjudicator, and a next-experiment designer, each recorded on an inspectable trace.
+- Adversarial baseline and a number-contrast harness that put the same claim to the same model with and without the provenance gate and report which quantities in each answer carry a receipt.
+- Genetic-support leg for the composer, so a SUPPORTED verdict on a genetic-association claim is computed from the Open Targets genetic-association score above a fixed threshold rather than retrieved.
 - Document the pre-registered catch-selection gate and the faithfulness controls in the README.
 - Provenance verification for the Moonen trace and program-marker coverage.
 
 ### Changed
+- The output validator distinguishes a quantity from identifier nomenclature (gene, program, variant, and quarter labels) and allows four-digit years as a structural exception, so the fabrication gate does not flag names that contain digits.
+- The adjudicator narrative is checked against the receipt ledger and restated if it introduces an unbacked number, with a ledger-only fallback that cannot contain one.
+- The power check reports as not applicable for a genetic-association claim, which rests on no perturbation.
 - Record program-marker coverage (measured of requested) in the effect receipts.
 - Record the multi-gene assignment of Moonen candidate CRE-gene links, so the noncoding target-gene call is not overstated.
 - Rest the TYK2 genetic-support case on the Open Targets score and the coding protective variant, and treat the Moonen link as candidate locus context.

@@ -107,12 +107,33 @@ effects are pleiotropic transcriptional machinery or scientifically contested), 
 the pre-registered fallback selected essentiality as the primary catch. The gate
 is documented, not reverse-fitted.
 
+## Reasoning layer and the baseline contrast
+
+The reasoning layer under `verdict/engine/` runs the actor and tool split end to
+end. Claude parses the claim into the structured form, states which checks are
+decisive and splits a composite claim into its parts, narrates the composed verdict,
+and proposes the discriminating next experiment. The deterministic layer runs the
+checks, gathers the genetic-support leg, and composes the verdict. Every decision is
+recorded on an inspectable trace.
+
+The adjudicator is given a ledger of the receipted values it may quote and nothing
+else. Its narrative is passed through the output validator: a number with no backing
+receipt is rejected and the narrative is restated, so the explanation is fluent while a
+figure without provenance cannot reach the reader.
+
+The number contrast puts the same claim to the same model twice, once unconstrained
+and once through the engine, and reports which quantities in each answer carry a
+receipt. The unconstrained answer states specific figures with no way to attach
+provenance to any of them; the engine states a number only when it can name the file
+and computation behind it. The contrast is over provenance, not correctness.
+`scripts/demo_contrast.py` runs it.
+
 ## Status
 
 Implemented: the provenance and refusal machinery, ingestion for the five data
-sources, the six confound checks, and the verdict composer. In progress: the
-composer genetic-support chain, the reasoning layer, the dossier renderer, and
-the application.
+sources, the six confound checks, the verdict composer with the genetic-support leg,
+the reasoning layer, the adversarial baseline and number contrast, and the dossier
+renderer. In progress: the application and the full evaluation write-up.
 
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
