@@ -1,0 +1,174 @@
+# Pre-registered evaluation set for VERDICT.
+#
+# This file fixes the claims and their expected verdicts before the confound
+# checks were wired to data, so the evaluation reads as a specification rather
+# than a fit. Every value in a case is either from a named source or marked
+# constructed for a structural test. No placeholder is filled with an invented
+# number.
+#
+# Field schema per case: id, status (CONCRETE | CONSTRUCTED), claim, source,
+# claim_type, parsed (the structured claim), expected_verdict, expected_firing_check,
+# context_match_ok, power_ok, deleted_knowledge_ok, notes.
+
+meta:
+  project: VERDICT
+  pre_registered: true
+  date_committed: "2026-07-08"
+  disease_scope: psoriasis
+  atlas_conditions: [Rest, Stim8hr, Stim48hr]
+  scope_caveat: >
+    All verdicts are scoped to CD4+ T-cell functional genomics. A REFUTED or
+    OVERCLAIMED verdict means "not supported given this data", never "the target
+    is wrong". The primary confound catch is essentiality/pleiotropy; the
+    direction check is secondary and is exercised here as a positive control.
+
+acceptance_rules:
+  - Every case declares an expected verdict and the check expected to fire.
+  - No number reaches output without a receipt; missing data yields INSUFFICIENT.
+  - The direction check fires only when the claim is context-matched (CD4+ T) and well-powered.
+  - SUPPORTED verdicts are computed from receipted evidence, not retrieved.
+  - No case uses DEXI/CLEC16A as a verdict target.
+  - The confusion matrix over this set is reported in the submission.
+
+cases:
+
+  # ----- PRIMARY: a selective-regulator claim confounded by essentiality -----
+  - id: chd4_selectivity
+    status: CONCRETE
+    claim: "CHD4 is a selective regulator of the Th2 cytokine program in CD4+ T cells."
+    source: "Hosokawa et al., PNAS 2013, 10.1073/pnas.1220865110 (Gata3/Chd4 complexes establish Th2 identity)."
+    claim_type: selectivity
+    parsed:
+      gene: "CHD4"
+      disease: "psoriasis"
+      program: "Th2"
+      direction: "regulates"
+      scope: "selective"
+      cell_type: "CD4+ T"
+      condition: "Stim8hr"
+    expected_verdict: OVERCLAIMED
+    expected_firing_check: essentiality
+    context_match_ok: true
+    power_ok: true
+    deleted_knowledge_ok: true
+    notes: >
+      Fires because CHD4 is common-essential in DepMap (dependent in ~92% of cell
+      lines) and its knockdown drives a top-percentile-breadth transcriptional
+      response in Zhu. The verdict is that the selectivity is unsupported and the
+      gene is a poor target, not that CHD4 fails to regulate Th2. Deleted-knowledge:
+      the fire is on the DepMap and Zhu numbers, not on the CHD4 literature.
+
+  # ----- SUPPORTED: a genetically supported target, computed not retrieved -----
+  - id: tyk2_psoriasis_genetics
+    status: CONCRETE
+    claim: "TYK2 is a genetically supported target for psoriasis."
+    source: "Moonen 2026 resolves rs144309607 through a chr19 CRE to TYK2 for psoriasis; Open Targets genetic-association score 0.930; TYK2 P1104A (rs34536443) protective (PMC10589750)."
+    claim_type: genetic_support
+    parsed:
+      gene: "TYK2"
+      variant: "rs144309607"
+      disease: "psoriasis"
+      program: "IL-23/IL-17 axis"
+      scope: "genetic_association"
+      cell_type: "CD4+ T"
+      cited_source: "Moonen V2G + Open Targets genetic association"
+    expected_verdict: SUPPORTED
+    expected_firing_check: none
+    context_match_ok: true
+    power_ok: true
+    deleted_knowledge_ok: true
+    notes: >
+      SUPPORTED must be computed from the receipted chain: Moonen variant-to-CRE-to-gene
+      (rs144309607 -> chr19:10379907-10381028 -> TYK2, three prioritization sources),
+      the Open Targets genetic-association score, and the Zhu functional context. Not
+      from knowing deucravacitinib is approved (that is color, not evidence).
+
+  # ----- OVERCLAIMED: selectivity is not safety -----
+  - id: tyk2_safety_scope
+    status: CONCRETE
+    claim: "TYK2 is a safe target because it acts only in activated T cells."
+    source: "P1104A under M. tuberculosis negative selection (medRxiv 2022.01.26.22269888); TYK2 signals via IL-12/IL-23/type-I-IFN across cell types (PMC10589750)."
+    claim_type: safety
+    parsed:
+      gene: "TYK2"
+      disease: "psoriasis"
+      program: "baseline immunity"
+      scope: "organism_wide"
+      cell_type: "CD4+ T"
+    expected_verdict: OVERCLAIMED
+    expected_firing_check: selectivity_safety
+    context_match_ok: true
+    power_ok: true
+    deleted_knowledge_ok: true
+    notes: >
+      An organism-wide safety claim cannot be established from CD4+ T-cell data, and
+      TYK2 is broadly expressed (Human Protein Atlas, detected in many tissues,
+      breadth 0.75). The engine returns SCOPE_RESTRICTED and never asserts an
+      organism-wide safe verdict.
+
+  # ----- INSUFFICIENT: the tool refuses rather than guess -----
+  - id: out_of_scope_safety
+    status: CONSTRUCTED
+    claim: "Knocking down this gene is safe across the whole immune system."
+    source: constructed
+    claim_type: safety
+    parsed:
+      gene: "any"
+      program: "organism-wide baseline immunity"
+      scope: "organism_wide"
+      cell_type: "all immune cell types"
+    expected_verdict: INSUFFICIENT
+    expected_firing_check: range_scope
+    context_match_ok: false
+    power_ok: false
+    deleted_knowledge_ok: true
+    notes: >
+      The refusal case. An organism-wide safety question over all immune cell types
+      cannot be answered from CD4+ T-cell functional data, so the verdict is
+      INSUFFICIENT rather than a fabricated answer.
+
+  # ----- REFUTED: circular validation -----
+  - id: circular_validation
+    status: CONSTRUCTED
+    claim: "This target is validated for its program by the same genome-scale CRISPRi screen used to validate it here."
+    source: "constructed structural case; cited evidence shares provenance with the validating atlas."
+    claim_type: composite
+    parsed:
+      gene: "any"
+      disease: "psoriasis"
+      cited_source: "Zhu2025"
+    expected_verdict: REFUTED
+    expected_firing_check: circularity
+    context_match_ok: true
+    power_ok: true
+    deleted_knowledge_ok: true
+    notes: >
+      Fires because the claim's cited evidence and the validating atlas both derive
+      from the Marson genome-scale CRISPRi screen (atlas_manifest.built_from). Circular
+      support is not independent support.
+
+  # ----- SUPPORTED: a clean regulator, direction consistent (positive control) -----
+  - id: gata3_th2_regulator
+    status: CONCRETE
+    claim: "GATA3 promotes the Th2 program in CD4+ T cells."
+    source: "GATA3 is the canonical master regulator of Th2 differentiation (standard immunology)."
+    claim_type: directional
+    parsed:
+      gene: "GATA3"
+      disease: "psoriasis"
+      program: "Th2"
+      direction: "promotes"
+      scope: "cell_type_specific"
+      cell_type: "CD4+ T"
+      condition: "Stim8hr"
+    expected_verdict: SUPPORTED
+    expected_firing_check: none
+    context_match_ok: true
+    power_ok: true
+    deleted_knowledge_ok: true
+    notes: >
+      True-negative control. GATA3 knockdown lowers the Th2 program (mean log2FC
+      about -2.7, cross-guide r about 0.78) in Stim8hr, consistent with the claim, so
+      the direction check does not fire and the verdict is SUPPORTED on receipted
+      evidence. Confirms the engine does not cry wolf on a genuine specific regulator,
+      the counterpart to the CHD4 essentiality catch.
