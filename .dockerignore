@@ -1,0 +1,11 @@
+.git
+data/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.duckdb
+*.parquet
+*.h5ad
+*.h5mu
+.env

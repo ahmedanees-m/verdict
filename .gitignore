@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.duckdb
+*.parquet
+*.h5ad
+data/raw/
+data/store/
+.DS_Store
+.pytest_cache/
