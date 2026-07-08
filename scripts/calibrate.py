@@ -27,6 +27,9 @@ def main() -> None:
             "quantile_cont(guide_correlation_signif, 0.25), quantile_cont(guide_correlation_signif, 0.75) "
             "FROM zhu_pert WHERE guide_correlation_signif IS NOT NULL "
             "AND NOT isnan(guide_correlation_signif)").fetchone()
+        xg_all = con.execute(
+            "SELECT median(guide_correlation_all) FROM zhu_pert "
+            "WHERE guide_correlation_all IS NOT NULL AND NOT isnan(guide_correlation_all)").fetchone()[0]
         cells = con.execute(
             "SELECT median(n_cells_target), quantile_cont(n_cells_target, 0.10) FROM zhu_pert"
         ).fetchone()
@@ -34,14 +37,20 @@ def main() -> None:
             "SELECT avg(CASE WHEN adj_p_value < ? THEN 1.0 ELSE 0.0 END) FROM zhu_de "
             "USING SAMPLE 5000000 ROWS", [FDR_SIG]).fetchone()[0]
         report["zhu"] = {
+            "crossguide_metric": "median guide_correlation_signif (cross-guide Pearson r of per-gene "
+                                 "DE z-scores restricted to significant DE genes; perturbations with two "
+                                 "guides and a defined value)",
             "crossguide_signif_n": int(xg[0]), "crossguide_signif_median": round(xg[1], 3),
             "crossguide_signif_q25": round(xg[2], 3), "crossguide_signif_q75": round(xg[3], 3),
+            "crossguide_all_median": round(float(xg_all), 3),
             "n_cells_median": round(cells[0], 1), "n_cells_p10": round(cells[1], 1),
             "de_significant_rate_at_fdr": round(float(sig_rate), 4),
         }
-        print("Zhu cross-guide concordance (significant genes): "
-              f"n={xg[0]} median={xg[1]:.3f} IQR[{xg[2]:.3f}, {xg[3]:.3f}] "
-              f"-> CROSSGUIDE_MIN={CROSSGUIDE_MIN} sits below the median, admitting reproducible perturbations")
+        print("Zhu cross-guide concordance on significant DE genes (guide_correlation_signif): "
+              f"n={xg[0]} median={xg[1]:.3f} IQR[{xg[2]:.3f}, {xg[3]:.3f}]. "
+              f"Over all measured genes (guide_correlation_all) the median is {xg_all:.3f} "
+              "(noise-dominated). The check uses the significant-gene statistic; "
+              f"CROSSGUIDE_MIN={CROSSGUIDE_MIN} sits below its median.")
         print(f"Zhu cells per perturbation: median={cells[0]:.0f} p10={cells[1]:.0f}")
         print(f"Zhu genome-wide significant rate at FDR<{FDR_SIG}: {sig_rate:.3%}")
 

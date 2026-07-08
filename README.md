@@ -91,6 +91,22 @@ scripts/                               download, inspection, calibration, evalua
 tests/                                 unit tests, including the fabrication-impossible test
 ```
 
+## Faithfulness and the pre-registered gate
+
+The direction check recomputes known immunology from the atlas as a control:
+knockdown of a lineage-master regulator lowers its program (GATA3 lowers Th2,
+TBX21 lowers Th1, STAT3 and AHR lower Th17), and knockdown of the T-cell-receptor
+module collapses the activation and regulatory programs. Recovering textbook
+biology from raw recomputation is what makes the catches trustworthy.
+
+The primary catch was chosen through a pre-registered gate. The evaluation fixed
+the direction-contradiction case as the intended primary, with essentiality as the
+fallback if no clean, context-matched, well-powered contradiction existed in the
+data. Scanning the three conditions found none (the strongest opposite-direction
+effects are pleiotropic transcriptional machinery or scientifically contested), so
+the pre-registered fallback selected essentiality as the primary catch. The gate
+is documented, not reverse-fitted.
+
 ## Status
 
 Implemented: the provenance and refusal machinery, ingestion for the five data

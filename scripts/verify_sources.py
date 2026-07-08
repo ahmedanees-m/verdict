@@ -46,15 +46,6 @@ def opentargets_assoc() -> None:
               f"  {row['disease']['name']}: overall={row['score']:.3f}")
 
 
-def gtex_gene() -> None:
-    r = requests.get("https://gtexportal.org/api/v2/reference/gene",
-                     params={"geneId": "TYK2"}, timeout=45)
-    data = r.json().get("data", [])
-    print(f"[GTEx gene] http {r.status_code} rows={len(data)}")
-    for g in data[:2]:
-        print(f"  gencodeId={g.get('gencodeId')} symbol={g.get('geneSymbol')} chrom={g.get('chromosome')}")
-
-
 def hpa_gene() -> None:
     r = requests.get(f"https://www.proteinatlas.org/{TYK2}.json", timeout=45)
     if r.status_code != 200:
@@ -65,26 +56,13 @@ def hpa_gene() -> None:
     print(f"[HPA] http {r.status_code} symbol={j.get('Gene')} keys={tissue_keys[:8]}")
 
 
-def depmap_index() -> None:
-    r = requests.get("https://depmap.org/portal/api/download/downloads", timeout=90)
-    d = r.json()
-    releases = d.get("releaseData") or d.get("releases") or []
-    names = [x.get("releaseName") or x.get("name") for x in releases]
-    print(f"[DepMap index] http {r.status_code} releases={names[:6]}")
-    table = d.get("table") or d.get("downloads") or []
-    for f in table:
-        fn = f.get("fileName", "")
-        if "CRISPRGeneEffect" in fn or "CommonEssential" in fn:
-            print(f"  {f.get('releaseName')} :: {fn} :: {str(f.get('downloadUrl',''))[:90]}")
-
-
 def main() -> None:
+    # Expression breadth uses the Human Protein Atlas; GTEx access was validated but
+    # is not used, so it is not probed here.
     for label, fn in [
         ("opentargets_target", opentargets_target),
         ("opentargets_assoc", opentargets_assoc),
-        ("gtex_gene", gtex_gene),
         ("hpa_gene", hpa_gene),
-        ("depmap_index", depmap_index),
     ]:
         try:
             fn()

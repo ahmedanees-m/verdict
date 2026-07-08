@@ -33,10 +33,38 @@ acceptance_rules:
 cases:
 
   # ----- PRIMARY: a selective-regulator claim confounded by essentiality -----
+  - id: med12_selectivity
+    status: CONSTRUCTED
+    claim: "MED12 is a selective regulator of the T-cell effector program in CD4+ T cells."
+    source: "constructed archetype of a naive selectivity claim on core transcriptional machinery. MED12 is a subunit of the Mediator complex; its kinase module regulates T-cell effector differentiation (bioRxiv 2022.09.02.506235)."
+    claim_type: selectivity
+    parsed:
+      gene: "MED12"
+      disease: "psoriasis"
+      program: "activation"
+      direction: "regulates"
+      scope: "selective"
+      cell_type: "CD4+ T"
+      condition: "Stim8hr"
+    expected_verdict: OVERCLAIMED
+    expected_firing_check: essentiality
+    context_match_ok: true
+    power_ok: true
+    deleted_knowledge_ok: true
+    notes: >
+      The primary catch, chosen because MED12 is a subunit of the general Mediator
+      transcriptional coactivator, where a selectivity claim is not credible. Fires
+      because MED12 is broadly essential in DepMap (median Chronos -0.54) and its
+      knockdown drives a genome-wide response in Zhu (99.9th-percentile breadth). The
+      verdict is at the evidence level: a knockdown phenotype cannot establish
+      selective regulation for a broadly essential, genome-wide factor, and it is a
+      poor drug target. Never that MED12 fails to affect the program.
+
+  # ----- SECONDARY: the same catch on a real publication -----
   - id: chd4_selectivity
     status: CONCRETE
     claim: "CHD4 is a selective regulator of the Th2 cytokine program in CD4+ T cells."
-    source: "Hosokawa et al., PNAS 2013, 10.1073/pnas.1220865110 (Gata3/Chd4 complexes establish Th2 identity)."
+    source: "constructed as a naive selectivity reading of CHD4/NuRD's role in Th2 (characterized carefully in Hosokawa et al., PNAS 2013, 10.1073/pnas.1220865110)."
     claim_type: selectivity
     parsed:
       gene: "CHD4"
@@ -52,36 +80,41 @@ cases:
     power_ok: true
     deleted_knowledge_ok: true
     notes: >
-      Fires because CHD4 is common-essential in DepMap (dependent in ~92% of cell
-      lines) and its knockdown drives a top-percentile-breadth transcriptional
-      response in Zhu. The verdict is that the selectivity is unsupported and the
-      gene is a poor target, not that CHD4 fails to regulate Th2. Deleted-knowledge:
-      the fire is on the DepMap and Zhu numbers, not on the CHD4 literature.
+      Real-publication counterpart. CHD4 is common-essential in DepMap (dependent in
+      ~92% of cell lines) with top-percentile breadth in Zhu. Frame strictly at the
+      evidence level: a knockdown-based specificity assertion is not supported given
+      CHD4's genome-wide pleiotropy. This is not a refutation of the careful Hosokawa
+      characterization; CHD4 does regulate Th2. The tested claim here is the naive
+      selectivity reading, not that work.
 
   # ----- SUPPORTED: a genetically supported target, computed not retrieved -----
   - id: tyk2_psoriasis_genetics
     status: CONCRETE
     claim: "TYK2 is a genetically supported target for psoriasis."
-    source: "Moonen 2026 resolves rs144309607 through a chr19 CRE to TYK2 for psoriasis; Open Targets genetic-association score 0.930; TYK2 P1104A (rs34536443) protective (PMC10589750)."
+    source: "Open Targets psoriasis genetic-association score 0.930; coding protective variant TYK2 P1104A (rs34536443, PMC10589750). Moonen 2026 provides candidate cis-regulatory links at the locus (Table S3)."
     claim_type: genetic_support
     parsed:
       gene: "TYK2"
-      variant: "rs144309607"
+      variant: "rs34536443"
       disease: "psoriasis"
       program: "IL-23/IL-17 axis"
       scope: "genetic_association"
       cell_type: "CD4+ T"
-      cited_source: "Moonen V2G + Open Targets genetic association"
+      cited_source: "Open Targets genetic association + coding variant"
     expected_verdict: SUPPORTED
     expected_firing_check: none
     context_match_ok: true
     power_ok: true
     deleted_knowledge_ok: true
     notes: >
-      SUPPORTED must be computed from the receipted chain: Moonen variant-to-CRE-to-gene
-      (rs144309607 -> chr19:10379907-10381028 -> TYK2, three prioritization sources),
-      the Open Targets genetic-association score, and the Zhu functional context. Not
-      from knowing deucravacitinib is approved (that is color, not evidence).
+      SUPPORTED is computed from the receipted robust legs: the Open Targets
+      genetic-association score (0.930) and the coding protective variant P1104A
+      (rs34536443). Keep the two variants distinct: rs34536443 is the coding variant
+      behind the genetic support; rs144309607 is a noncoding variant whose Moonen CRE
+      is prioritized to twelve genes at this locus (including ICAM1), so it does not
+      resolve the target gene to TYK2 and is recorded only as candidate locus context.
+      The available Moonen table is the prioritized candidate list, not the
+      functionally significant CRE-gene subset.
 
   # ----- OVERCLAIMED: selectivity is not safety -----
   - id: tyk2_safety_scope
@@ -167,8 +200,12 @@ cases:
     power_ok: true
     deleted_knowledge_ok: true
     notes: >
-      True-negative control. GATA3 knockdown lowers the Th2 program (mean log2FC
-      about -2.7, cross-guide r about 0.78) in Stim8hr, consistent with the claim, so
-      the direction check does not fire and the verdict is SUPPORTED on receipted
-      evidence. Confirms the engine does not cry wolf on a genuine specific regulator,
-      the counterpart to the CHD4 essentiality catch.
+      True-negative control and the counterpart to the MED12 essentiality catch.
+      GATA3 knockdown lowers the Th2 program (mean log2FC about -2.7, cross-guide r
+      about 0.78) in Stim8hr, consistent with the claim, so the direction check does
+      not fire and the verdict is SUPPORTED on receipted evidence. The discriminator
+      against MED12 is essentiality, not breadth: GATA3 is non-essential in DepMap
+      (median Chronos +0.09, dependent in under 5% of lines) though its knockdown is
+      broad, so the essentiality check spares it, whereas MED12 is broadly essential
+      and is flagged. A lineage-restricted, dispensable regulator versus a general,
+      essential one.

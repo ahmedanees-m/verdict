@@ -124,7 +124,9 @@ class Store:
         if not self._zhu:
             return NO_RECEIPT
         pc = self._pert_code(gene, condition)
-        codes = self._gene_codes(program_genes)
+        requested = [g for g in (program_genes or []) if g]
+        n_requested = len(requested)
+        codes = self._gene_codes(requested)
         if pc is None or not codes:
             return NO_RECEIPT
         code_list = [c for c, _ in codes]
@@ -138,13 +140,14 @@ class Store:
         mean_lfc, mean_z, n, n_sig = row
         if not n or mean_lfc is None:
             return NO_RECEIPT
+        cov = f"{int(n)} of {n_requested} program markers measured"
         q = f"pert_code={pc}, gene_code in [{len(code_list)} program genes], condition={condition}"
         n_sig = int(n_sig or 0)
         return {
             "mean_log_fc": self._receipt(
                 round(float(mean_lfc), 6), dataset=ZHU_DATASET, file=ZHU_FILE,
-                computation=(f"mean signed log2 fold change of {gene} knockdown over {int(n)} "
-                             f"program genes ({n_sig} significant at FDR<0.10), {condition}"),
+                computation=(f"mean signed log2 fold change of {gene} knockdown over the {condition} "
+                             f"program ({cov}; {n_sig} significant at FDR<0.10)"),
                 query=q),
             "mean_zscore": self._receipt(
                 round(float(mean_z), 6), dataset=ZHU_DATASET, file=ZHU_FILE,
@@ -326,15 +329,28 @@ class Store:
         return [dict(zip(cols, row)) for row in self.con.execute(sql, params).fetchall()]
 
     def moonen_trace(self, gene: str, disease: str | None = None):
-        """Receipted count of variant-to-CRE-to-gene links for a gene and disease."""
+        """Receipted count of prioritized candidate CRE-gene links for a gene.
+
+        The available Moonen table (Table S3) is the prioritized candidate list,
+        not the functionally significant CRE-gene subset, and a single CRE is
+        prioritized to several genes. The receipt records the number of genes each
+        CRE assigns to, so the noncoding target-gene call is not overstated.
+        """
         links = self.moonen_links(gene, disease)
         if not links:
             return NO_RECEIPT
         variants = sorted({str(l["variant"]) for l in links if l.get("variant")})
         cres = sorted({str(l["cre"]) for l in links if l.get("cre")})
+        sources = sorted({str(l["source"]) for l in links if l.get("source")})
+        ph = ",".join("?" * len(cres))
+        n_genes = self.con.execute(
+            f"SELECT count(DISTINCT gene_symbol) FROM moonen WHERE cre IN ({ph})", cres
+        ).fetchone()[0]
         scope = f" for {disease}" if disease else ""
         return self._receipt(
             len(links), dataset=MOONEN_DATASET, file=MOONEN_FILE,
-            computation=f"variant-to-CRE-to-gene links resolving to {gene}{scope}: "
-                        f"{len(variants)} variants through {len(cres)} cis-regulatory elements",
+            computation=(f"prioritized candidate CRE-gene links to {gene}{scope}: {len(variants)} "
+                         f"variant(s) through {len(cres)} CRE(s), methods {sources}. These CRE(s) "
+                         f"are prioritized to {int(n_genes)} genes in total, so the noncoding "
+                         f"target-gene call is not resolved to {gene} alone"),
             query=f"moonen[gene={gene}{', disease=' + disease if disease else ''}]")
